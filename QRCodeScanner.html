@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>簡易 QRCode 掃描器</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+  <h2>QRCode 掃描器</h2>
+  <p>將 QRCode 對準鏡頭即可自動掃描。</p>
+
+  <button id="startBtn" style="padding:10px 20px; font-size:16px; margin-bottom:20px;">開始使用相機</button>
+
+  <video id="video" autoplay style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div id="result">尚未掃描到資料</div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const resultBox = document.getElementById("result");
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        video.style.display = "block";
+      } catch (err) {
+        resultBox.textContent = "無法存取相機: " + err;
+      }
+    }
+
+    function scanQRCode() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imgData.data, imgData.width, imgData.height);
+
+        if (code) {
+          resultBox.textContent = "掃描成功：" + code.data;
+          window.location.href = code.data; // 自動導向掃描到的網址
+        }
+      }
+      requestAnimationFrame(scanQRCode);
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startCamera);
+    requestAnimationFrame(scanQRCode);
+  </script>
+</body>
+</html>
