@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>簡易 QRCode 掃描器</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    .success { color: #28a745; }
+    .error { color: #dc3545; }
+    .info { color: #17a2b8; }
+    #apiResult {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+      min-height: 50px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+  <h2>QRCode 掃描器</h2>
+  <p>將 QRCode 對準鏡頭即可自動掃描。</p>
+
+  <button id="startBtn" style="padding:10px 20px; font-size:16px; margin-bottom:20px;">開始使用相機</button>
+
+  <video id="video" autoplay style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div id="result">尚未掃描到資料</div>
+  <div id="apiResult"></div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const resultBox = document.getElementById("result");
+    const apiResultBox = document.getElementById("apiResult");
+    
+    let isScanning = true;
+    const API_URL = "https://frogjump-n8n.zeabur.app/webhook/716308eb-2cba-480e-8a72-f96de4461e42";
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        video.style.display = "block";
+        isScanning = true;
+        
+        // 隱藏開始按鈕並重置顯示
+        document.getElementById("startBtn").style.display = "none";
+        resultBox.innerHTML = "正在掃描QRCode...";
+        resultBox.className = "info";
+        apiResultBox.innerHTML = "";
+      } catch (err) {
+        resultBox.textContent = "無法存取相機: " + err;
+        resultBox.className = "error";
+      }
+    }
+
+    // 解析QRCode格式：四位數字 + 最多16碼英文
+    function parseQRCode(data) {
+      const regex = /^(\d{4})([A-Za-z]{1,16})$/;
+      const match = data.match(regex);
+      
+      if (match) {
+        return {
+          valid: true,
+          numbers: match[1],
+          letters: match[2],
+          original: data
+        };
+      }
+      
+      return {
+        valid: false,
+        original: data
+      };
+    }
+
+    // 呼叫API
+    async function callAPI(parsedData) {
+      try {
+        apiResultBox.innerHTML = '<span class="info">正在呼叫API...</span>';
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DEAuth': '6goq5z5z2U0hQkVw'
+          },
+          body: JSON.stringify({
+            ID: parsedData.numbers
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          apiResultBox.innerHTML = `<span class="success">✓ API呼叫成功</span><br><small>回應: ${JSON.stringify(result)}</small>`;
+        } else {
+          apiResultBox.innerHTML = `<span class="error">✗ API呼叫失敗 (${response.status})</span>`;
+        }
+      } catch (error) {
+        apiResultBox.innerHTML = `<span class="error">✗ 網路錯誤: ${error.message}</span>`;
+      }
+    }
+
+    // 停止相機並關閉視訊串流
+    function stopCamera() {
+      if (video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+        video.style.display = "none";
+      }
+      isScanning = false;
+    }
+
+    // 修改後的API呼叫函數，包含跳轉功能
+    async function callAPIAndRedirect(parsedData) {
+      try {
+        apiResultBox.innerHTML = '<span class="info">正在呼叫API...</span>';
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DEAuth': '6goq5z5z2U0hQkVw'
+          },
+          body: JSON.stringify({
+            ID: parsedData.numbers
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          apiResultBox.innerHTML = `<span class="success">✓ API呼叫成功，準備跳轉...</span>`;
+          
+          // 2秒後跳轉到另一個HTML頁面
+          setTimeout(() => {
+            // 您可以修改這個URL為實際的目標頁面
+            window.location.href = "success.html?id=" + parsedData.numbers;
+          }, 2000);
+        } else {
+          apiResultBox.innerHTML = `<span class="error">✗ API呼叫失敗 (${response.status})</span>`;
+          // API失敗也視為掃描失敗，關閉相機
+          setTimeout(() => {
+            stopCamera();
+            resultBox.innerHTML = "API呼叫失敗，請重新開始";
+            resultBox.className = "error";
+            apiResultBox.innerHTML = "";
+            document.getElementById("startBtn").style.display = "block";
+          }, 2000);
+        }
+      } catch (error) {
+        apiResultBox.innerHTML = `<span class="error">✗ 網路錯誤: ${error.message}</span>`;
+        // 網路錯誤也視為掃描失敗，關閉相機
+        setTimeout(() => {
+          stopCamera();
+          resultBox.innerHTML = "網路錯誤，請重新開始";
+          resultBox.className = "error";
+          apiResultBox.innerHTML = "";
+          document.getElementById("startBtn").style.display = "block";
+        }, 2000);
+      }
+    }
+
+    function scanQRCode() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imgData.data, imgData.width, imgData.height);
+
+        if (code) {
+          isScanning = false; // 停止掃描避免重複處理
+          
+          const parsedData = parseQRCode(code.data);
+          
+          if (parsedData.valid) {
+            resultBox.innerHTML = `<span class="success">✓ 掃描成功</span><br>ID: ${parsedData.numbers}`;
+            resultBox.className = "success";
+            
+            // 掃描成功：直接呼叫API並準備跳轉
+            callAPI(parsedData);
+          } else {
+            // 掃描失敗：關閉相機，要求重新開啟
+            resultBox.innerHTML = `<span class="error">✗ 格式錯誤</span><br>應為：4位數字 + 最多16碼英文<br>掃描到: ${parsedData.original}`;
+            resultBox.className = "error";
+            apiResultBox.innerHTML = '<span class="error">格式不符，請重新開始掃描</span>';
+            
+            setTimeout(() => {
+              stopCamera();
+              resultBox.innerHTML = "格式錯誤，請重新開始";
+              resultBox.className = "error";
+              apiResultBox.innerHTML = "";
+              document.getElementById("startBtn").style.display = "block";
+            }, 3000);
+          }
+        }
+      }
+      
+      if (isScanning) {
+        requestAnimationFrame(scanQRCode);
+      }
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startCamera);
+    requestAnimationFrame(scanQRCode);
+  </script>
+</body>
+</html>
