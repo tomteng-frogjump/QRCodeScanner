@@ -139,11 +139,11 @@
         <div class="info-section">
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">會員ID:</span>
+              <span class="info-label full-width">會員ID:</span>
               <span class="info-value" id="memberId">-</span>
             </div>
             
-            <div class="info-item">
+            <div class="info-item ">
               <span class="info-label">中文姓名:</span>
               <span class="info-value" id="chineseName">-</span>
             </div>
@@ -205,13 +205,6 @@
                 <span id="needBabyChairBadge" class="status-badge">-</span>
               </span>
             </div>
-            
-            <div class="info-item">
-              <span class="info-label">報到狀態:</span>
-              <span class="info-value">
-                <span id="checkInBadge" class="status-badge">-</span>
-              </span>
-            </div>
           </div>
         </div>
         
@@ -260,7 +253,7 @@
           document.getElementById('memberId').textContent = data.ID;
           document.getElementById('chineseName').textContent = data.ChineseName;
           document.getElementById('engName').textContent = data.EngName;
-          document.getElementById('carNumber').textContent = data.CarNumber || '無';
+          document.getElementById('carNumber').textContent = data.CarNumber || '';
           document.getElementById('adultPartner').textContent = data.AdultPartner + ' 人';
           document.getElementById('babyPartner').textContent = data.BabyPartner + ' 人';
           document.getElementById('kidPartner').textContent = data.KidPartner + ' 人';
@@ -271,7 +264,6 @@
           setBadge('isVegetariansBadge', data.IsVegetarians);
           setBadge('hasPartnerBadge', data.HasPartner);
           setBadge('needBabyChairBadge', data.NeedBabyChair);
-          setBadge('checkInBadge', data.CheckIn);
           
           // 顯示內容
           document.getElementById('loadingDiv').style.display = 'none';
@@ -290,16 +282,62 @@
       document.getElementById('errorDiv').style.display = 'block';
     }
 
-    function confirmCheckIn() {
+    async function confirmCheckIn() {
       if (confirm('請確認已收費，並允許報到')) {
-        // 這裡可以加入確認報到的API呼叫
-        alert('報到確認完成！');
-        goBack();
+        const memberId = getUrlParameter('id');
+        const apiDataParam = getUrlParameter('data');
+        
+        if (!apiDataParam) {
+          alert('資料錯誤，無法完成報到');
+          return;
+        }
+        
+        try {
+          const data = JSON.parse(decodeURIComponent(apiDataParam));
+          
+          // 顯示處理中狀態
+          const confirmBtn = document.querySelector('.btn-confirm');
+          const originalText = confirmBtn.textContent;
+          confirmBtn.textContent = '處理中...';
+          confirmBtn.disabled = true;
+          
+          // 呼叫報到API
+          const response = await fetch('https://frogjump-n8n.zeabur.app/webhook/fee6b282-61b0-4a43-9105-f2b58a18082f', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'DEAuth': '6goq5z5z2U0hQkVw'
+            },
+            body: JSON.stringify({
+              ID: data.ID
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            alert('報到確認完成！');
+            goBack();
+          } else {
+            alert(`報到失敗：HTTP ${response.status}`);
+            // 恢復按鈕狀態
+            confirmBtn.textContent = originalText;
+            confirmBtn.disabled = false;
+          }
+        } catch (error) {
+          console.error('報到API錯誤:', error);
+          alert('網路錯誤，報到失敗');
+          // 恢復按鈕狀態
+          const confirmBtn = document.querySelector('.btn-confirm');
+          confirmBtn.textContent = originalText;
+          confirmBtn.disabled = false;
+        }
       }
     }
 
     function goBack() {
-      window.location.href = 'QRCodeScanner.html';
+      setTimeout(() => {
+        window.location.href = 'QRCodeScanner.html';
+      }, 1000);
     }
 
     // 頁面載入時執行

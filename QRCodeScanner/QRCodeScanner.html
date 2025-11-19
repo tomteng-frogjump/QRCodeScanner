@@ -156,7 +156,7 @@
           // 2秒後跳轉到另一個HTML頁面，並將API回傳資料透過URL參數傳遞
           setTimeout(() => {
             const encodedData = encodeURIComponent(JSON.stringify(result));
-            window.location.href = "Auth.html?id=" + parsedData.numbers + "&data=" + encodedData;
+            window.location.href = "Auth.html?data=" + encodedData;
           }, 2000);
         } else {
           apiResultBox.innerHTML = `<span class="error">✗ API呼叫失敗 (${response.status})</span>`;
