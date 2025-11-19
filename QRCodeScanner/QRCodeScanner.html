@@ -153,10 +153,10 @@
           const result = await response.json();
           apiResultBox.innerHTML = `<span class="success">✓ API呼叫成功，準備跳轉...</span>`;
           
-          // 2秒後跳轉到另一個HTML頁面
+          // 2秒後跳轉到另一個HTML頁面，並將API回傳資料透過URL參數傳遞
           setTimeout(() => {
-            // 您可以修改這個URL為實際的目標頁面
-            window.location.href = "success.html?id=" + parsedData.numbers;
+            const encodedData = encodeURIComponent(JSON.stringify(result));
+            window.location.href = "Auth.html?id=" + parsedData.numbers + "&data=" + encodedData;
           }, 2000);
         } else {
           apiResultBox.innerHTML = `<span class="error">✗ API呼叫失敗 (${response.status})</span>`;
@@ -201,7 +201,7 @@
             resultBox.className = "success";
             
             // 掃描成功：直接呼叫API並準備跳轉
-            callAPI(parsedData);
+            callAPIAndRedirect(parsedData);
           } else {
             // 掃描失敗：關閉相機，要求重新開啟
             resultBox.innerHTML = `<span class="error">✗ 格式錯誤</span><br>應為：4位數字 + 最多16碼英文<br>掃描到: ${parsedData.original}`;

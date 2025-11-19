@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>報到資訊確認</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .info-section {
+      margin-bottom: 30px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+    .info-item.full-width {
+      grid-column: 1 / -1;
+    }
+    .info-label {
+      font-weight: bold;
+      color: #495057;
+      margin-right: 10px;
+    }
+    .info-value {
+      color: #212529;
+      text-align: right;
+    }
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge-true {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .badge-false {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .button-container {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 120px;
+    }
+    .btn-confirm {
+      background-color: #28a745;
+      color: white;
+    }
+    .btn-confirm:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+    }
+    .btn-cancel {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-cancel:hover {
+      background-color: #5a6268;
+      transform: translateY(-2px);
+    }
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: #6c757d;
+    }
+    .error {
+      text-align: center;
+      padding: 50px;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>報到資訊確認</h1>
+    </div>
+    
+    <div class="content">
+      <div id="loadingDiv" class="loading">
+        <p>正在載入報到資訊...</p>
+      </div>
+      
+      <div id="errorDiv" class="error" style="display: none;">
+        <p>載入失敗，請重新掃描</p>
+        <button class="btn btn-cancel" onclick="goBack()">返回掃描</button>
+      </div>
+      
+      <div id="contentDiv" style="display: none;">
+        <div class="info-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">會員ID:</span>
+              <span class="info-value" id="memberId">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">中文姓名:</span>
+              <span class="info-value" id="chineseName">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">英文姓名:</span>
+              <span class="info-value" id="engName">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">參加狀態:</span>
+              <span class="info-value">
+                <span id="isJoinBadge" class="status-badge">-</span>
+              </span>
+            </div>
+            
+            <div class="info-item full-width">
+              <span class="info-label">車牌號碼:</span>
+              <span class="info-value" id="carNumber">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">素食需求:</span>
+              <span class="info-value">
+                <span id="isVegetariansBadge" class="status-badge">-</span>
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">攜伴參加:</span>
+              <span class="info-value">
+                <span id="hasPartnerBadge" class="status-badge">-</span>
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">成人陪同:</span>
+              <span class="info-value" id="adultPartner">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">嬰兒陪同:</span>
+              <span class="info-value" id="babyPartner">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">兒童陪同:</span>
+              <span class="info-value" id="kidPartner">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">青少年陪同:</span>
+              <span class="info-value" id="teenagerPartner">-</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">需要嬰兒椅:</span>
+              <span class="info-value">
+                <span id="needBabyChairBadge" class="status-badge">-</span>
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">報到狀態:</span>
+              <span class="info-value">
+                <span id="checkInBadge" class="status-badge">-</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="button-container">
+          <button class="btn btn-confirm" onclick="confirmCheckIn()">確認</button>
+          <button class="btn btn-cancel" onclick="goBack()">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getUrlParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function setBadge(elementId, value) {
+      const element = document.getElementById(elementId);
+      if (value) {
+        element.textContent = "是";
+        element.className = "status-badge badge-true";
+      } else {
+        element.textContent = "否";
+        element.className = "status-badge badge-false";
+      }
+    }
+
+    function loadMemberInfo() {
+      const memberId = getUrlParameter('id');
+      const apiDataParam = getUrlParameter('data');
+      
+      if (!memberId || !apiDataParam) {
+        // 沒有會員ID或API資料，直接跳回掃描頁面
+        goBack();
+        return;
+      }
+
+      // 載入延遲效果
+      setTimeout(() => {
+        try {
+          // 解析API回傳的資料
+          const data = JSON.parse(decodeURIComponent(apiDataParam));
+          
+          // 填入資料
+          document.getElementById('memberId').textContent = data.ID;
+          document.getElementById('chineseName').textContent = data.ChineseName;
+          document.getElementById('engName').textContent = data.EngName;
+          document.getElementById('carNumber').textContent = data.CarNumber || '無';
+          document.getElementById('adultPartner').textContent = data.AdultPartner + ' 人';
+          document.getElementById('babyPartner').textContent = data.BabyPartner + ' 人';
+          document.getElementById('kidPartner').textContent = data.KidPartner + ' 人';
+          document.getElementById('teenagerPartner').textContent = data.TeenagerPartner + ' 人';
+          
+          // 設定狀態徽章
+          setBadge('isJoinBadge', data.IsJoin);
+          setBadge('isVegetariansBadge', data.IsVegetarians);
+          setBadge('hasPartnerBadge', data.HasPartner);
+          setBadge('needBabyChairBadge', data.NeedBabyChair);
+          setBadge('checkInBadge', data.CheckIn);
+          
+          // 顯示內容
+          document.getElementById('loadingDiv').style.display = 'none';
+          document.getElementById('contentDiv').style.display = 'block';
+          
+        } catch (error) {
+          // 資料解析失敗，跳回掃描頁面
+          console.error('資料解析失敗:', error);
+          goBack();
+        }
+      }, 1000);
+    }
+
+    function showError() {
+      document.getElementById('loadingDiv').style.display = 'none';
+      document.getElementById('errorDiv').style.display = 'block';
+    }
+
+    function confirmCheckIn() {
+      if (confirm('請確認已收費，並允許報到')) {
+        // 這裡可以加入確認報到的API呼叫
+        alert('報到確認完成！');
+        goBack();
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'QRCodeScanner.html';
+    }
+
+    // 頁面載入時執行
+    window.addEventListener('DOMContentLoaded', loadMemberInfo);
+  </script>
+</body>
+</html>
