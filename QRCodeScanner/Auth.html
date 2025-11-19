@@ -143,12 +143,12 @@
               <span class="info-value" id="memberId">-</span>
             </div>
             
-            <div class="info-item ">
+            <div class="info-item full-width">
               <span class="info-label">中文姓名:</span>
               <span class="info-value" id="chineseName">-</span>
             </div>
             
-            <div class="info-item">
+            <div class="info-item full-width">
               <span class="info-label">英文姓名:</span>
               <span class="info-value" id="engName">-</span>
             </div>
@@ -253,7 +253,7 @@
           document.getElementById('memberId').textContent = data.ID;
           document.getElementById('chineseName').textContent = data.ChineseName;
           document.getElementById('engName').textContent = data.EngName;
-          document.getElementById('carNumber').textContent = data.CarNumber || '';
+          document.getElementById('carNumber').textContent = data.CarNumber || '無';
           document.getElementById('adultPartner').textContent = data.AdultPartner + ' 人';
           document.getElementById('babyPartner').textContent = data.BabyPartner + ' 人';
           document.getElementById('kidPartner').textContent = data.KidPartner + ' 人';
