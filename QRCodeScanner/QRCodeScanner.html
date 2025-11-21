@@ -88,14 +88,21 @@
         $(resultBox).html("正在掃描QRCode...").removeClass().addClass("info");
         $(apiResultBox).html("");
         
+        // 重置掃描狀態
+        isScanning = false;
+        
         // 等待視頻準備就緒後才設置掃描狀態
         video.addEventListener('loadedmetadata', () => {
           isScanning = true;
+          // 確保掃描循環重新開始
+          requestAnimationFrame(scanQRCode);
         });
         
         // 如果視頻已經準備就緒，直接設置
         if (video.readyState >= 2) {
           isScanning = true;
+          // 確保掃描循環重新開始
+          requestAnimationFrame(scanQRCode);
         }
       } catch (err) {
         $("#result").text("無法存取相機: " + err).removeClass().addClass("error");
