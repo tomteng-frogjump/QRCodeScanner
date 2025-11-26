@@ -41,8 +41,8 @@
   <p>將 QRCode 對準鏡頭即可自動掃描。</p>
 
   <div style="margin-bottom: 20px;">
-    <label for="deAuthInput" style="display: block; margin-bottom: 5px; font-weight: bold;">活動認證碼:</label>
-    <input type="text" id="deAuthInput" placeholder="請輸入活動認證碼" 
+    <label for="deAuthInput" style="display: block; margin-bottom: 5px; font-weight: bold;">DEAuth 認證碼:</label>
+    <input type="text" id="deAuthInput" placeholder="請輸入DEAuth認證碼" 
            style="padding: 8px; font-size: 14px; width: 300px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
   </div>
 
@@ -63,19 +63,6 @@
     
     let isScanning = true;
     const API_URL = "https://frogjump-n8n.zeabur.app/webhook/716308eb-2cba-480e-8a72-f96de4461e42";
-    
-    // 使用token對deAuthInput進行加密
-    function encryptWithToken(deAuthInput, token) {
-      let encrypted = '';
-      for (let i = 0; i < deAuthInput.length; i++) {
-        const charCode = deAuthInput.charCodeAt(i);
-        const tokenChar = token.charCodeAt(i % token.length);
-        const encryptedChar = String.fromCharCode(charCode ^ tokenChar);
-        encrypted += encryptedChar;
-      }
-      // 將加密結果轉換為Base64編碼
-      return btoa(encrypted);
-    }
     
     // 頁面載入時恢復DEAuth值
     $(document).ready(function() {
@@ -123,16 +110,16 @@
       }
     }
 
-    // 解析QRCode格式：最長10碼任意英數字;固定16碼英數字
+    // 解析QRCode格式：四位數字 + 最多16碼英文
     function parseQRCode(data) {
-      const regex = /^([A-Za-z0-9]{1,10});([A-Za-z0-9]{16})$/;
+      const regex = /^(\d{4})([A-Za-z]{1,16})$/;
       const match = data.match(regex);
       
       if (match) {
         return {
           valid: true,
-          id: match[1],
-          token: match[2],
+          numbers: match[1],
+          letters: match[2],
           original: data
         };
       }
@@ -157,7 +144,7 @@
             'DEAuth': deAuthValue
           },
           body: JSON.stringify({
-            ID: parsedData.id
+            ID: parsedData.numbers
           })
         });
 
@@ -186,12 +173,12 @@
     // 修改後的API呼叫函數，包含跳轉功能
     async function callAPIAndRedirect(parsedData) {
       try {
-        const deAuthInput = $("#deAuthInput").val().trim();
+        const deAuthValue = $("#deAuthInput").val().trim();
         
         // 保存DEAuth值到sessionStorage
-        sessionStorage.setItem('deAuth', deAuthInput);
+        sessionStorage.setItem('deAuth', deAuthValue);
         
-        if (!deAuthInput) {
+        if (!deAuthValue) {
           $(apiResultBox).html('<span class="error">請先輸入DEAuth認證碼</span>');
           setTimeout(() => {
             stopCamera();
@@ -202,20 +189,16 @@
           return;
         }
         
-        // 使用token加密deAuthInput後組成簽章
-        const encryptedDeAuth = encryptWithToken(deAuthInput, parsedData.token);
-        const deAuthSignature = encryptedDeAuth + parsedData.token;
-        
         $(apiResultBox).html('<span class="info">正在呼叫API...</span>');
         
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'DEAuth': deAuthSignature
+            'DEAuth': deAuthValue
           },
           body: JSON.stringify({
-            ID: parsedData.id
+            ID: parsedData.numbers
           })
         });
 
@@ -239,7 +222,8 @@
           // 2秒後跳轉到另一個HTML頁面，並將API回傳資料透過URL參數傳遞
           setTimeout(() => {
             const encodedData = encodeURIComponent(JSON.stringify(result));
-            window.location.href = "Auth.html?data=" + encodedData + "&deAuthSignature=" + encodeURIComponent(deAuthSignature);
+            const deAuthValue = $("#deAuthInput").val().trim();
+            window.location.href = "Auth.html?data=" + encodedData + "&deAuth=" + encodeURIComponent(deAuthValue);
           }, 2000);
         } else {
           // 檢查404錯誤是否有JSON回應
@@ -297,13 +281,13 @@
           const parsedData = parseQRCode(code.data);
           
           if (parsedData.valid) {
-            $(resultBox).html(`<span class="success">✓ 掃描成功</span><br>ID: ${parsedData.id}`).removeClass().addClass("success");
+            $(resultBox).html(`<span class="success">✓ 掃描成功</span><br>ID: ${parsedData.numbers}`).removeClass().addClass("success");
             
             // 掃描成功：直接呼叫API並準備跳轉
             callAPIAndRedirect(parsedData);
           } else {
             // 掃描失敗：關閉相機，要求重新開啟
-            $(resultBox).html(`<span class="error">✗ 格式錯誤</span><br>應為：最長10碼英數字;固定16碼英數字<br>掃描到: ${parsedData.original}`).removeClass().addClass("error");
+            $(resultBox).html(`<span class="error">✗ 格式錯誤</span><br>應為：4位數字 + 最多16碼英文<br>掃描到: ${parsedData.original}`).removeClass().addClass("error");
             $(apiResultBox).html('<span class="error">格式不符，請重新開始掃描</span>');
             
             setTimeout(() => {
