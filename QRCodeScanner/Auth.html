@@ -202,15 +202,15 @@
             </div>
             
             <div class="info-item">
-              <span class="info-label">應付金額:</span>
-              <span class="info-value" id="totalAmount" style="color: #e74c3c; font-weight: bold;">-</span>
-            </div>
-            
-            <div class="info-item">
               <span class="info-label">需要嬰兒椅:</span>
               <span class="info-value">
                 <span id="needBabyChairBadge" class="status-badge">-</span>
               </span>
+            </div>
+
+            <div class="info-item full-width">
+              <span class="info-label">應付金額:</span>
+              <span class="info-value" id="totalAmount" style="color: #e74c3c; font-weight: bold;">-</span>
             </div>
           </div>
         </div>
@@ -319,12 +319,12 @@
           const originalText = $confirmBtn.text();
           $confirmBtn.text('處理中...').prop('disabled', true);
           
-          // 從URL參數中獲取DEAuth (如果有的話)
+          // 從URL參數中獲取DEAuth簽章
           const urlParams = new URLSearchParams(window.location.search);
-          const deAuthFromUrl = urlParams.get('deAuth');
+          const deAuthSignature = urlParams.get('deAuthSignature');
           
-          // 如果沒有DEAuth參數，提示錯誤
-          if (!deAuthFromUrl) {
+          // 如果沒有DEAuth簽章參數，提示錯誤
+          if (!deAuthSignature) {
             alert('缺少認證資訊，請重新掃描');
             goBack();
             return;
@@ -341,7 +341,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'DEAuth': deAuthFromUrl
+              'DEAuth': deAuthSignature
             },
             body: JSON.stringify({
               ID: data.ID,
