@@ -47,6 +47,7 @@
   </div>
 
   <button id="startBtn" style="padding:10px 20px; font-size:16px; margin-bottom:20px;">開始使用相機</button>
+  <button id="adminActionsBtn" style="padding:10px 20px; font-size:16px; margin-left:10px; margin-bottom:20px;">進階操作</button>
 
   <video id="video" autoplay style="display:none;"></video>
   <canvas id="canvas" style="display:none;"></canvas>
@@ -74,6 +75,16 @@
       // 監聽DEAuth輸入變化並保存
       $("#deAuthInput").on('input', function() {
         sessionStorage.setItem('deAuth', $(this).val());
+      });
+
+      // 前往進階操作頁面
+      $("#adminActionsBtn").on('click', function() {
+        // 確保目前的DEAuth已存入sessionStorage
+        const current = $("#deAuthInput").val();
+        if (current) {
+          sessionStorage.setItem('deAuth', current);
+        }
+        window.location.href = 'AdminActions.html';
       });
     });
 

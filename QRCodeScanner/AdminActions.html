@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>進階操作</title>
+  <style>
+    body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 24px; }
+    .container { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,.08); overflow: hidden; }
+    .header { background: #343a40; color: #fff; padding: 18px 24px; }
+    .header h1 { margin: 0; font-size: 20px; }
+    .content { padding: 24px; }
+    .btn { display: inline-block; padding: 12px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; margin: 6px; }
+    .btn-primary { background: #007bff; color: #fff; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-danger { background: #dc3545; color: #fff; }
+    .btn-success { background: #28a745; color: #fff; }
+    .section-title { font-weight: 700; margin-bottom: 10px; }
+    #status { margin-top: 16px; padding: 12px; border-radius: 8px; background: #f1f3f5; min-height: 40px; }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>進階操作</h1>
+    </div>
+    <div class="content">
+      <div class="section-title">通知操作</div>
+      <div>
+        <button id="btnNotifyNoShow" class="btn btn-danger">發送通知信給未報到同仁</button>
+        <button id="btnSendNoShowList" class="btn btn-secondary">寄送未報到清單</button>
+        <button id="btnSendSummary" class="btn btn-success">寄送參與名單</button>
+      </div>
+
+      <div id="status"></div>
+
+      <div style="margin-top: 20px;">
+        <button id="btnBack" class="btn btn-primary">返回掃描頁面</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ENDPOINTS = {
+      notifyNoShow: 'https://frog-video.ddns.net/webhook/b3fa8fa7-notify-no-show',
+      sendNoShowList: 'https://frog-video.ddns.net/webhook/b3fa8fa7-send-no-show-list',
+      sendSummary: 'https://frog-video.ddns.net/webhook/b3fa8fa7-send-summary'
+    };
+
+    function setStatus(html, cls = '') {
+      const $el = $('#status');
+      $el.removeClass().addClass(cls).html(html);
+    }
+
+    async function postWithAuth(url) {
+      const savedDEAuth = sessionStorage.getItem('deAuth');
+      if (!savedDEAuth) {
+        setStatus('<span style="color:#dc3545">✗ 缺少DEAuth認證碼，請回掃描頁輸入</span>');
+        return;
+      }
+      try {
+        setStatus('<span style="color:#17a2b8">⌛ 正在呼叫API...</span>');
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DEAuth': savedDEAuth
+          },
+          body: JSON.stringify({})
+        });
+        if (res.ok) {
+          let text;
+          try { text = await res.text(); } catch (_) { text = ''; }
+          setStatus(`<span style="color:#28a745">✓ 成功</span>${text ? '<br><small>' + text + '</small>' : ''}`);
+        } else {
+          let msg = `HTTP ${res.status}`;
+          try { const j = await res.json(); if (j && j.Message) msg += ` - ${j.Message}`; } catch (_) {}
+          setStatus(`<span style="color:#dc3545">✗ 失敗</span><br><small>${msg}</small>`);
+        }
+      } catch (err) {
+        setStatus(`<span style="color:#dc3545">✗ 網路錯誤</span><br><small>${err && err.message ? err.message : err}</small>`);
+      }
+    }
+
+    $('#btnNotifyNoShow').on('click', () => postWithAuth(ENDPOINTS.notifyNoShow));
+    $('#btnSendNoShowList').on('click', () => postWithAuth(ENDPOINTS.sendNoShowList));
+    $('#btnSendSummary').on('click', () => postWithAuth(ENDPOINTS.sendSummary));
+
+    $('#btnBack').on('click', () => {
+      window.location.href = 'QRCodeScanner.html';
+    });
+  </script>
+</body>
+</html>
