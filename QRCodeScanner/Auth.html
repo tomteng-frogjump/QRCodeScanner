@@ -174,8 +174,31 @@
             </div>
             
             <div class="info-item">
-              <span class="info-label">攜伴總人數:</span>
-              <span class="info-value" id="totalPartners">-</span>
+              <span class="info-label">成人<br>滿１２歲以上:</span>
+              <span class="info-value">
+                <input type="number" id="adultPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">兒童<br>未滿３歲以下:</span>
+              <span class="info-value">
+                <input type="number" id="babyPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">兒童<br>:滿３歲～未滿６歲:</span>
+              <span class="info-value">
+                <input type="number" id="kidPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
+              </span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">青少年<br>滿６歲～未滿１２歲:</span>
+              <span class="info-value">
+                <input type="number" id="teenagerPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
+              </span>
             </div>
             
             <div class="info-item">
@@ -216,6 +239,16 @@
       }
     }
 
+    function updateTotalAmount() {
+      const adult = parseInt($('#adultPartner').val()) || 0;
+      const baby = parseInt($('#babyPartner').val()) || 0;
+      const kid = parseInt($('#kidPartner').val()) || 0;
+      const teenager = parseInt($('#teenagerPartner').val()) || 0;
+      
+      const totalAmount = (adult * 1800) + (kid * 400) + (teenager * 900) + (baby * 0);
+      $('#totalAmount').text('NT$ ' + totalAmount.toLocaleString());
+    }
+
     function loadMemberInfo() {
       const apiDataParam = getUrlParameter('data');
       
@@ -238,12 +271,14 @@
           $('#engName').text(data.EngName);
           $('#carNumber').text(data.CarNumber || '無');
           
-          // 計算總人數和金額
-          const totalPartners = data.AdultPartner + data.BabyPartner + data.KidPartner + data.TeenagerPartner;
-          const totalAmount = (data.AdultPartner * 1800) + (data.KidPartner * 400) + (data.TeenagerPartner * 900) + (data.BabyPartner * 0);
+          // 填入攜伴人數
+          $('#adultPartner').val(data.AdultPartner || 0);
+          $('#babyPartner').val(data.BabyPartner || 0);
+          $('#kidPartner').val(data.KidPartner || 0);
+          $('#teenagerPartner').val(data.TeenagerPartner || 0);
           
-          $('#totalPartners').text(totalPartners + ' 人');
-          $('#totalAmount').text('NT$ ' + totalAmount.toLocaleString());
+          // 計算金額
+          updateTotalAmount();
           
           // 設定狀態徽章
           setBadge('isJoinBadge', data.IsJoin);
@@ -295,6 +330,12 @@
             return;
           }
           
+          // 取得目前的攜伴人數
+          const currentAdult = parseInt($('#adultPartner').val()) || 0;
+          const currentBaby = parseInt($('#babyPartner').val()) || 0;
+          const currentKid = parseInt($('#kidPartner').val()) || 0;
+          const currentTeenager = parseInt($('#teenagerPartner').val()) || 0;
+          
           // 呼叫報到API
           const response = await fetch('https://frog-video.ddns.net/webhook/fee6b282-61b0-4a43-9105-f2b58a18082f', {
             method: 'POST',
@@ -303,7 +344,11 @@
               'DEAuth': deAuthFromUrl
             },
             body: JSON.stringify({
-              ID: data.ID
+              ID: data.ID,
+              AdultPartner: currentAdult,
+              BabyPartner: currentBaby,
+              KidPartner: currentKid,
+              TeenagerPartner: currentTeenager
             })
           });
           
