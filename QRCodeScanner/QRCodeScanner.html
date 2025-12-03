@@ -121,9 +121,9 @@
       }
     }
 
-    // 解析QRCode格式：最長10碼任意英數字;固定16碼英數字
+    // 解析QRCode格式：最長10碼任意文字可包含符號;固定16碼英數字
     function parseQRCode(data) {
-      const regex = /^([A-Za-z0-9]{1,10});([A-Za-z0-9]{16})$/;
+      const regex = /^(.{1,10});([A-Za-z0-9]{16})$/;
       const match = data.match(regex);
       
       if (match) {
@@ -309,7 +309,7 @@
             callAPIAndRedirect(parsedData);
           } else {
             // 掃描失敗：關閉相機，要求重新開啟
-            $(resultBox).html(`<span class="error">✗ 格式錯誤</span><br>應為：最長10碼英數字;固定16碼英數字<br>掃描到: ${parsedData.original}`).removeClass().addClass("error");
+            $(resultBox).html(`<span class="error">✗ 格式錯誤</span><br>應為：最長10碼任意文字可包含符號;固定16碼英數字<br>掃描到: ${parsedData.original}`).removeClass().addClass("error");
             $(apiResultBox).html('<span class="error">格式不符，請重新開始掃描</span>');
             
             setTimeout(() => {
