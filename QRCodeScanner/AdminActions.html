@@ -83,9 +83,23 @@
       }
     }
 
-    $('#btnNotifyNoShow').on('click', () => postWithAuth(ENDPOINTS.notifyNoShow));
-    $('#btnSendNoShowList').on('click', () => postWithAuth(ENDPOINTS.sendNoShowList));
-    $('#btnSendSummary').on('click', () => postWithAuth(ENDPOINTS.sendSummary));
+    $('#btnNotifyNoShow').on('click', () => {
+      if (confirm('確定要發送通知信給未報到同仁嗎？')) {
+        postWithAuth(ENDPOINTS.notifyNoShow);
+      }
+    });
+    
+    $('#btnSendNoShowList').on('click', () => {
+      if (confirm('確定要寄送未報到清單嗎？')) {
+        postWithAuth(ENDPOINTS.sendNoShowList);
+      }
+    });
+    
+    $('#btnSendSummary').on('click', () => {
+      if (confirm('確定要寄送參與名單嗎？')) {
+        postWithAuth(ENDPOINTS.sendSummary);
+      }
+    });
 
     $('#btnBack').on('click', () => {
       window.location.href = 'QRCodeScanner.html';
