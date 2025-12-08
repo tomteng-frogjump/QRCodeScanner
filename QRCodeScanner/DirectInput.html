@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>直接輸入員工編號</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 30px;
+      text-align: center;
+    }
+    .input-section {
+      margin-bottom: 30px;
+    }
+    .input-label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #495057;
+    }
+    .input-field {
+      width: 100%;
+      max-width: 300px;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
+    .button-container {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 120px;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+    .btn-primary:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #5a6268;
+      transform: translateY(-2px);
+    }
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      min-height: 20px;
+    }
+    .status.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>直接輸入員工編號</h1>
+    </div>
+    
+    <div class="content">
+      <div class="input-section">
+        <label for="employeeId" class="input-label">員工編號:</label>
+        <input type="text" id="employeeId" class="input-field" placeholder="請輸入員工編號" maxlength="10">
+      </div>
+      
+      <div class="button-container">
+        <button id="submitBtn" class="btn btn-primary">確認</button>
+        <button id="backBtn" class="btn btn-secondary">返回</button>
+      </div>
+      
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://frog-video.ddns.net/webhook/716308eb-2cba-480e-8a72-f96de4461e42";
+    const DEFAULT_TOKEN = "DsHDK5YHLRDTOQzN";
+
+    // 產生簽章並轉換為Base64編碼
+    function createSignature(deAuthInput, token) {
+      const signatureData = deAuthInput + token;
+      return btoa(signatureData);
+    }
+
+    function setStatus(message, type = '') {
+      const statusEl = $('#status');
+      statusEl.removeClass().addClass('status');
+      if (type) {
+        statusEl.addClass(type);
+      }
+      statusEl.html(message);
+    }
+
+    async function queryEmployee() {
+      const employeeId = $('#employeeId').val().trim();
+      const savedDEAuth = sessionStorage.getItem('deAuth');
+      
+      if (!employeeId) {
+        setStatus('請輸入員工編號', 'error');
+        return;
+      }
+      
+      if (!savedDEAuth) {
+        setStatus('缺少認證資訊，請回到掃描頁面輸入DEAuth認證碼', 'error');
+        return;
+      }
+
+      try {
+        setStatus('⌛ 正在查詢員工資料...', 'info');
+        $('#submitBtn').prop('disabled', true).text('查詢中...');
+
+        // 產生簽章
+        const deAuthSignature = createSignature(savedDEAuth, DEFAULT_TOKEN);
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DEAuth': deAuthSignature
+          },
+          body: JSON.stringify({
+            ID: employeeId
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // 檢查是否已經報到
+          if (result.CheckIn === true) {
+            setStatus('✗ 已經報到，不可重複報到', 'error');
+            setTimeout(() => {
+              setStatus('');
+              $('#submitBtn').prop('disabled', false).text('確認查詢');
+            }, 3000);
+            return;
+          }
+          
+          setStatus('✓ 查詢成功，準備跳轉...', 'success');
+          
+          // 2秒後跳轉到Auth頁面
+          setTimeout(() => {
+            const encodedData = encodeURIComponent(JSON.stringify(result));
+            window.location.href = "Auth.html?data=" + encodedData + "&deAuthSignature=" + encodeURIComponent(deAuthSignature);
+          }, 2000);
+        } else {
+          // 檢查404錯誤是否有JSON回應
+          if (response.status === 404) {
+            try {
+              const errorData = await response.json();
+              if (errorData.Message) {
+                setStatus(`✗ ${errorData.Message}`, 'error');
+                $('#submitBtn').prop('disabled', false).text('確認查詢');
+                return;
+              }
+            } catch (e) {
+              // 如果無法解析JSON，使用預設訊息
+            }
+          }
+          
+          setStatus(`✗ 查詢失敗 (HTTP ${response.status})`, 'error');
+          $('#submitBtn').prop('disabled', false).text('確認查詢');
+        }
+      } catch (error) {
+        console.error('API呼叫錯誤:', error);
+        let errorMessage = "網路錯誤";
+        
+        if (error.name === 'TypeError') {
+          errorMessage = "連線失敗，請檢查網路設定";
+        } else {
+          errorMessage = `網路錯誤: ${error.message}`;
+        }
+        
+        setStatus(`✗ ${errorMessage}`, 'error');
+        $('#submitBtn').prop('disabled', false).text('確認查詢');
+      }
+    }
+
+    $(document).ready(function() {
+      // 監聽Enter鍵
+      $('#employeeId').on('keypress', function(e) {
+        if (e.which === 13) { // Enter鍵
+          queryEmployee();
+        }
+      });
+
+      // 提交按鈕事件
+      $('#submitBtn').on('click', queryEmployee);
+      
+      // 返回按鈕事件
+      $('#backBtn').on('click', function() {
+        window.location.href = 'QRCodeScanner.html';
+      });
+
+      // 自動聚焦到輸入框
+      $('#employeeId').focus();
+    });
+  </script>
+</body>
+</html>

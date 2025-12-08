@@ -145,13 +145,8 @@
             </div>
             
             <div class="info-item full-width">
-              <span class="info-label">中文姓名:</span>
+              <span class="info-label">姓名:</span>
               <span class="info-value" id="chineseName">-</span>
-            </div>
-            
-            <div class="info-item full-width">
-              <span class="info-label">英文姓名:</span>
-              <span class="info-value" id="engName">-</span>
             </div>
             
             <div class="info-item">
@@ -198,13 +193,6 @@
               <span class="info-label">青少年<br>滿６歲～未滿１２歲:</span>
               <span class="info-value">
                 <input type="number" id="teenagerPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
-              </span>
-            </div>
-            
-            <div class="info-item">
-              <span class="info-label">需要嬰兒椅:</span>
-              <span class="info-value">
-                <span id="needBabyChairBadge" class="status-badge">-</span>
               </span>
             </div>
 
@@ -267,8 +255,7 @@
           
           // 填入資料
           $('#memberId').text(data.ID);
-          $('#chineseName').text(data.ChineseName);
-          $('#engName').text(data.EngName);
+          $('#chineseName').text(data.Name);
           $('#carNumber').text(data.CarNumber || '無');
           
           // 填入攜伴人數
@@ -283,7 +270,6 @@
           // 設定狀態徽章
           setBadge('isJoinBadge', data.IsJoin);
           setBadge('isVegetariansBadge', data.IsVegetarians);
-          setBadge('needBabyChairBadge', data.NeedBabyChair);
           
           // 顯示內容
           $('#loadingDiv').hide();
