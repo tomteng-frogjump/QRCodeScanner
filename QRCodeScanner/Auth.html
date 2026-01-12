@@ -145,15 +145,23 @@
             </div>
             
             <div class="info-item full-width">
-              <span class="info-label">姓名:</span>
+              <span class="info-label">中文姓名:</span>
               <span class="info-value" id="chineseName">-</span>
             </div>
             
-            <div class="info-item">
-              <span class="info-label">參加狀態:</span>
-              <span class="info-value">
-                <span id="isJoinBadge" class="status-badge">-</span>
-              </span>
+            <div class="info-item full-width">
+              <span class="info-label">英文姓名:</span>
+              <span class="info-value" id="englishName">-</span>
+            </div>
+
+            <div class="info-item full-width">
+              <span class="info-label">人員類型:</span>
+              <span class="info-value" id="type">-</span>
+            </div>
+
+            <div class="info-item full-width">
+              <span class="info-label">部門:</span>
+              <span class="info-value" id="department">-</span>
             </div>
             
             <div class="info-item">
@@ -163,44 +171,11 @@
               </span>
             </div>
 
-            <div class="info-item full-width">
-              <span class="info-label">車牌號碼:</span>
-              <span class="info-value">
-                <input type="text" id="carNumber" placeholder="請輸入車牌號碼" style="width: 200px; text-align: center; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
-              </span>
-            </div>
-            
             <div class="info-item">
-              <span class="info-label">成人<br>滿１２歲以上:</span>
+              <span class="info-label">是否有摸彩券:</span>
               <span class="info-value">
-                <input type="number" id="adultPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
+                <span id="hasLotteryBadge" class="status-badge">-</span>
               </span>
-            </div>
-            
-            <div class="info-item">
-              <span class="info-label">兒童<br>未滿３歲以下:</span>
-              <span class="info-value">
-                <input type="number" id="babyPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
-              </span>
-            </div>
-            
-            <div class="info-item">
-              <span class="info-label">兒童<br>:滿３歲～未滿６歲:</span>
-              <span class="info-value">
-                <input type="number" id="kidPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
-              </span>
-            </div>
-            
-            <div class="info-item">
-              <span class="info-label">青少年<br>滿６歲～未滿１２歲:</span>
-              <span class="info-value">
-                <input type="number" id="teenagerPartner" min="0" style="width: 60px; text-align: center;" onchange="updateTotalAmount()">
-              </span>
-            </div>
-
-            <div class="info-item full-width">
-              <span class="info-label">應付金額:</span>
-              <span class="info-value" id="totalAmount" style="color: #e74c3c; font-weight: bold;">-</span>
             </div>
           </div>
         </div>
@@ -229,16 +204,6 @@
       }
     }
 
-    function updateTotalAmount() {
-      const adult = parseInt($('#adultPartner').val()) || 0;
-      const baby = parseInt($('#babyPartner').val()) || 0;
-      const kid = parseInt($('#kidPartner').val()) || 0;
-      const teenager = parseInt($('#teenagerPartner').val()) || 0;
-      
-      const totalAmount = (adult * 1800) + (kid * 400) + (teenager * 900) + (baby * 0);
-      $('#totalAmount').text('NT$ ' + totalAmount.toLocaleString());
-    }
-
     function loadMemberInfo() {
       const apiDataParam = getUrlParameter('data');
       
@@ -257,21 +222,14 @@
           
           // 填入資料
           $('#memberId').text(data.ID);
-          $('#chineseName').text(data.Name);
-          $('#carNumber').val(data.CarNumber || '');
-          
-          // 填入攜伴人數
-          $('#adultPartner').val(data.AdultPartner || 0);
-          $('#babyPartner').val(data.BabyPartner || 0);
-          $('#kidPartner').val(data.KidPartner || 0);
-          $('#teenagerPartner').val(data.TeenagerPartner || 0);
-          
-          // 計算金額
-          updateTotalAmount();
+          $('#chineseName').text(data.ChineseName);
+          $('#englishName').text(data.EnglishName);
+          $('#type').text(data.Type);
+          $('#department').text(data.Department);
           
           // 設定狀態徽章
-          setBadge('isJoinBadge', data.IsJoin);
           setBadge('isVegetariansBadge', data.IsVegetarians);
+          setBadge('hasLotteryBadge', data.HasLottery);
           
           // 顯示內容
           $('#loadingDiv').hide();
@@ -318,13 +276,6 @@
             return;
           }
           
-          // 取得目前的攜伴人數和車牌號碼
-          const currentAdult = parseInt($('#adultPartner').val()) || 0;
-          const currentBaby = parseInt($('#babyPartner').val()) || 0;
-          const currentKid = parseInt($('#kidPartner').val()) || 0;
-          const currentTeenager = parseInt($('#teenagerPartner').val()) || 0;
-          const currentCarNumber = $('#carNumber').val().trim();
-          
           // 呼叫報到API
           const response = await fetch('https://frog-video.ddns.net/webhook/fee6b282-61b0-4a43-9105-f2b58a18082f', {
             method: 'POST',
@@ -333,12 +284,7 @@
               'DEAuth': deAuthSignature
             },
             body: JSON.stringify({
-              ID: data.ID,
-              AdultPartner: currentAdult,
-              BabyPartner: currentBaby,
-              KidPartner: currentKid,
-              TeenagerPartner: currentTeenager,
-              CarNumber: currentCarNumber
+              ID: data.ID
             })
           });
           
