@@ -28,7 +28,6 @@
     <div class="content">
       <div class="section-title">通知操作</div>
       <div>
-        <button id="btnNotifyNoShow" class="btn btn-danger">發送通知信給未報到同仁</button>
         <button id="btnSendNoShowList" class="btn btn-secondary">寄送未報到清單</button>
         <button id="btnSendSummary" class="btn btn-success">寄送參與名單</button>
       </div>
@@ -43,9 +42,8 @@
 
   <script>
     const ENDPOINTS = {
-      notifyNoShow: 'https://frog-video.ddns.net/webhook/b3fa8fa7-notify-no-show',
-      sendNoShowList: 'https://frog-video.ddns.net/webhook/b3fa8fa7-send-no-show-list',
-      sendSummary: 'https://frog-video.ddns.net/webhook/b3fa8fa7-send-summary'
+      sendNoShowList: 'https://frogjump-n8n.ddns.net/webhook/b3fa8fa7-send-no-show-list',
+      sendSummary: 'https://frogjump-n8n.ddns.net/webhook/b3fa8fa7-send-summary'
     };
 
     function setStatus(html, cls = '') {
@@ -82,12 +80,6 @@
         setStatus(`<span style="color:#dc3545">✗ 網路錯誤</span><br><small>${err && err.message ? err.message : err}</small>`);
       }
     }
-
-    $('#btnNotifyNoShow').on('click', () => {
-      if (confirm('確定要發送通知信給未報到同仁嗎？')) {
-        postWithAuth(ENDPOINTS.notifyNoShow);
-      }
-    });
     
     $('#btnSendNoShowList').on('click', () => {
       if (confirm('確定要寄送未報到清單嗎？')) {
