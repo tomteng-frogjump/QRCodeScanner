@@ -32,6 +32,52 @@
       background-color: #f8f9fa;
       min-height: 50px;
     }
+    /* 掃描區域指示器 */
+    .video-container {
+      position: relative;
+      display: inline-block;
+    }
+    .scan-overlay {
+      position: absolute;
+      top: 25%;
+      left: 25%;
+      width: 50%;
+      height: 50%;
+      border: 2px solid #28a745;
+      border-radius: 8px;
+      box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+    }
+    .scan-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #28a745;
+    }
+    .scan-corner.top-left {
+      top: -2px;
+      left: -2px;
+      border-right: none;
+      border-bottom: none;
+    }
+    .scan-corner.top-right {
+      top: -2px;
+      right: -2px;
+      border-left: none;
+      border-bottom: none;
+    }
+    .scan-corner.bottom-left {
+      bottom: -2px;
+      left: -2px;
+      border-right: none;
+      border-top: none;
+    }
+    .scan-corner.bottom-right {
+      bottom: -2px;
+      right: -2px;
+      border-left: none;
+      border-top: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -50,7 +96,15 @@
   <button id="adminActionsBtn" style="padding:10px 20px; font-size:16px; margin-left:10px; margin-bottom:20px;">進階操作</button>
   <button id="directInputBtn" style="padding:10px 20px; font-size:16px; margin-left:10px; margin-bottom:20px;">直接輸入員工編號</button>
 
-  <video id="video" autoplay style="display:none;"></video>
+  <div class="video-container">
+    <video id="video" autoplay style="display:none;"></video>
+    <div class="scan-overlay" id="scanOverlay" style="display:none;">
+      <div class="scan-corner top-left"></div>
+      <div class="scan-corner top-right"></div>
+      <div class="scan-corner bottom-left"></div>
+      <div class="scan-corner bottom-right"></div>
+    </div>
+  </div>
   <canvas id="canvas" style="display:none;"></canvas>
 
   <div id="result">尚未掃描到資料</div>
@@ -65,6 +119,12 @@
     
     let isScanning = true;
     const API_URL = "https://frogjump-n8n.ddns.net/webhook/716308eb-2cba-480e-8a72-f96de4461e42";
+    
+    // 掃描性能優化參數
+    const SCAN_INTERVAL = 150; // 掃描間隔(毫秒) - 降低掃描頻率
+    const SCAN_SCALE = 0.5; // 掃描解析度縮放比例
+    let lastScanTime = 0;
+    let animationFrameId = null;
     
     // 頁面載入時恢復DEAuth值
     $(document).ready(function() {
@@ -101,9 +161,19 @@
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        // 優化video constraints以提高性能
+        const constraints = {
+          video: {
+            facingMode: "environment",
+            width: { ideal: 640 }, // 限制解析度以提高性能
+            height: { ideal: 480 },
+            frameRate: { ideal: 30 } // 限制幀率
+          }
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         video.style.display = "block";
+        $("#scanOverlay").show(); // 顯示掃描區域指示器
         
         // 隱藏開始按鈕並重置顯示
         $("#startBtn").hide();
@@ -197,8 +267,14 @@
         tracks.forEach(track => track.stop());
         video.srcObject = null;
         video.style.display = "none";
+        $("#scanOverlay").hide(); // 隱藏掃描區域指示器
       }
       isScanning = false;
+      // 取消動畫幀請求
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
     }
 
     // 修改後的API呼叫函數，包含跳轉功能
@@ -299,14 +375,44 @@
       }
     }
 
-    function scanQRCode() {
+    function scanQRCode(currentTime) {
+      // 頻率控制：只在指定間隔後才進行掃描
+      if (currentTime - lastScanTime < SCAN_INTERVAL) {
+        if (isScanning) {
+          animationFrameId = requestAnimationFrame(scanQRCode);
+        }
+        return;
+      }
+      
       if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        lastScanTime = currentTime;
+        
+        // 計算掃描區域（只掃描中心50%區域以提高性能）
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+        const scanWidth = Math.floor(videoWidth * 0.5); // 掃描區域寬度
+        const scanHeight = Math.floor(videoHeight * 0.5); // 掃描區域高度
+        const scanX = Math.floor((videoWidth - scanWidth) / 2); // 掃描區域X起點
+        const scanY = Math.floor((videoHeight - scanHeight) / 2); // 掃描區域Y起點
+        
+        // 設置canvas大小為縮放後的掃描區域
+        const scaledWidth = Math.floor(scanWidth * SCAN_SCALE);
+        const scaledHeight = Math.floor(scanHeight * SCAN_SCALE);
+        
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+        
+        // 只繪製和掃描中心區域，並縮放以提高性能
+        context.drawImage(
+          video,
+          scanX, scanY, scanWidth, scanHeight, // 源區域：影片中心
+          0, 0, scaledWidth, scaledHeight // 目標區域：縮放後的canvas
+        );
 
-        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imgData.data, imgData.width, imgData.height);
+        const imgData = context.getImageData(0, 0, scaledWidth, scaledHeight);
+        const code = jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "dontInvert" // 禁用顏色反轉嘗試以提高速度
+        });
 
         if (code) {
           isScanning = false; // 停止掃描避免重複處理
@@ -334,7 +440,7 @@
       }
       
       if (isScanning) {
-        requestAnimationFrame(scanQRCode);
+        animationFrameId = requestAnimationFrame(scanQRCode);
       }
     }
 
