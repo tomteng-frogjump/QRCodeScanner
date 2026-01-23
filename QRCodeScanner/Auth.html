@@ -277,14 +277,15 @@
           }
           
           // 呼叫報到API
-          const response = await fetch('https://frogjump-n8n.ddns.net/webhook/fee6b282-61b0-4a43-9105-f2b58a18082f', {
+          const response = await fetch('https://n8n.frog-jump.com/webhook/84b89270-ef3e-4ef4-aec3-a63ebadc6de7', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'DEAuth': deAuthSignature
             },
             body: JSON.stringify({
-              ID: data.ID
+              ID: data.ID,
+              EventID: data.EventID
             })
           });
           
