@@ -143,6 +143,7 @@
     let isScanning = true;
     const API_URL = "https://n8n.frog-jump.com/webhook/b5b93953-713e-43fd-9b2d-e7cfe2cc40aa";
     const EventID = '20260117';
+    const RedirectDelay = 200;
 
     // 掃描性能優化參數
     const SCAN_INTERVAL = 150; // 掃描間隔(毫秒) - 降低掃描頻率
@@ -361,7 +362,7 @@
           setTimeout(() => {
             const encodedData = encodeURIComponent(JSON.stringify(result));
             window.location.href = "Auth.html?data=" + encodedData + "&deAuthSignature=" + encodeURIComponent(deAuthSignature);
-          }, 2000);
+          }, RedirectDelay);
         } else {
           // 檢查404錯誤是否有JSON回應
           if (response.status === 404) {
