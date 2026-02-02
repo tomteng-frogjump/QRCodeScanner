@@ -74,12 +74,16 @@ export default class QRScanner {
     }
   }
 
-  // 初始化設定界面
-  initializeSettings() {
+  // 載入設定到模組表單
+  loadSettingsToModal() {
     // 設定預設值
     $("#performancePreset").val(this.settings.performancePreset);
     $("#scanSpeed").val(this.settings.scanSpeed);
     $("#frameRate").val(this.settings.videoConstraints.frameRate.ideal);
+    
+    // 根據視頻解析度設定視頻品質選項
+    const videoQuality = this.getVideoQualityFromConstraints(this.settings.videoConstraints);
+    $("#videoQuality").val(videoQuality);
 
     // 更新顯示值
     this.updateScanSpeedDisplay(this.settings.scanSpeed);
@@ -90,6 +94,33 @@ export default class QRScanner {
 
     // 顯示設備資訊
     this.updateDeviceInfo();
+  }
+
+  // 初始化設定界面
+  initializeSettings() {
+    this.loadSettingsToModal();
+  }
+
+  // 根據視頻約束條件取得視頻品質
+  getVideoQualityFromConstraints(constraints) {
+    const height = constraints.height.ideal;
+    if (height <= 360) return '360p';
+    if (height <= 480) return '480p';
+    return '720p';
+  }
+
+  // 根據視頻品質取得視頻約束條件
+  getConstraintsFromVideoQuality(quality, currentConstraints) {
+    const qualityMap = {
+      '360p': { width: { ideal: 480 }, height: { ideal: 360 } },
+      '480p': { width: { ideal: 640 }, height: { ideal: 480 } },
+      '720p': { width: { ideal: 1280 }, height: { ideal: 720 } }
+    };
+    
+    return {
+      ...currentConstraints,
+      ...qualityMap[quality]
+    };
   }
 
   // 更新掃描速度顯示
@@ -163,6 +194,16 @@ export default class QRScanner {
   bindSettingsEvents() {
     const self = this;
 
+    // 設定模組顯示時，載入當前設定
+    $('#settingsModal').on('show.bs.modal', function () {
+      self.loadSettingsToModal();
+    });
+
+    // 設定模組隱藏時，如果未儲存則恢復原始設定
+    $('#settingsModal').on('hidden.bs.modal', function () {
+      self.loadSettingsToModal();
+    });
+
     // 效能預設組變更
     $("#performancePreset").on('change', function () {
       const preset = PERFORMANCE_PRESETS[$(this).val()];
@@ -184,6 +225,11 @@ export default class QRScanner {
       self.checkForCustomSettings();
     });
 
+    // 視頻品質變更
+    $("#videoQuality").on('change', function () {
+      self.checkForCustomSettings();
+    });
+
     // 儲存設定按鈕
     $("#saveSettings").on('click', function () {
       self.saveSettingsFromModal();
@@ -194,7 +240,8 @@ export default class QRScanner {
   checkForCustomSettings() {
     const currentSettings = {
       frameRate: parseInt($("#frameRate").val()),
-      scanSpeed: parseInt($("#scanSpeed").val())
+      scanSpeed: parseInt($("#scanSpeed").val()),
+      videoQuality: $("#videoQuality").val()
     };
 
     // 檢查是否符合任何預設組
@@ -203,8 +250,11 @@ export default class QRScanner {
 
     for (let presetKey of presets) {
       const preset = PERFORMANCE_PRESETS[presetKey];
+      const presetVideoQuality = this.getVideoQualityFromConstraints(preset.videoConstraints);
+      
       if (preset.videoConstraints.frameRate.ideal === currentSettings.frameRate &&
-        preset.scanSpeed === currentSettings.scanSpeed) {
+        preset.scanSpeed === currentSettings.scanSpeed &&
+        presetVideoQuality === currentSettings.videoQuality) {
         matchesPreset = true;
         $("#performancePreset").val(presetKey);
         break;
@@ -221,6 +271,8 @@ export default class QRScanner {
   applyPreset(preset) {
     $("#scanSpeed").val(preset.scanSpeed);
     $("#frameRate").val(preset.videoConstraints.frameRate.ideal);
+    const videoQuality = this.getVideoQualityFromConstraints(preset.videoConstraints);
+    $("#videoQuality").val(videoQuality);
     this.updateScanSpeedDisplay(preset.scanSpeed);
     $("#frameRateValue").text(preset.videoConstraints.frameRate.ideal + 'fps');
   }
@@ -232,10 +284,13 @@ export default class QRScanner {
 
     // 如果是自定義設定，使用當前表單值
     if (preset === 'CUSTOM') {
+      const videoQuality = $("#videoQuality").val();
+      const videoConstraints = this.getConstraintsFromVideoQuality(videoQuality, presetConfig.videoConstraints);
+      
       this.settings = {
         performancePreset: 'CUSTOM',
         videoConstraints: {
-          ...presetConfig.videoConstraints,
+          ...videoConstraints,
           frameRate: { ideal: parseInt($("#frameRate").val()) }
         },
         scanSpeed: parseInt($("#scanSpeed").val()),
