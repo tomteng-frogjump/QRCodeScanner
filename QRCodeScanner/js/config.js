@@ -12,7 +12,7 @@ const APP_CONFIG = {
     // 應用程式常數
     CONSTANTS: {
         EVENT_ID: "20260117",
-        DEFAULT_TOKEN: "8Kx9mN4pQ7vR2aYu",
+        DEFAULT_TOKEN: "VAWE3839JJ2ujdnH",
         REDIRECT_DELAY: 200
     },
 
