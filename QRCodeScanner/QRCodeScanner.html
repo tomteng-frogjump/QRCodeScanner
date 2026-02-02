@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>簡易 QRCode 掃描器</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -20,9 +21,13 @@
       <input type="text" id="deAuthInput" placeholder="請輸入DEAuth認證碼" class="input-field compact">
     </div>
 
-    <button id="startBtn" class="btn btn-primary small">開始使用相機</button>
-    <button id="adminActionsBtn" class="btn btn-secondary small">進階操作</button>
+    <button id="startBtn" class="btn btn-primary small" disabled>開始使用相機</button>
+    <button id="stopBtn" class="btn btn-danger small" style="display: none;">停止掃描</button>
+    <button id="adminActionsBtn" class="btn btn-secondary small" disabled>進階操作</button>
     <button id="directInputBtn" class="btn btn-secondary small">直接輸入員工編號</button>
+
+    <div id="result">尚未掃描到資料</div>
+    <div id="apiResult"></div>
 
     <div class="video-container">
       <video id="video" autoplay style="display:none;"></video>
@@ -34,11 +39,9 @@
       </div>
     </div>
     <canvas id="canvas" style="display:none;"></canvas>
-
-    <div id="result">尚未掃描到資料</div>
-    <div id="apiResult"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
   <script type="module">
     import QRScanner from './js/qrscanner.js';
     

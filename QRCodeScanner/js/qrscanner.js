@@ -25,6 +25,9 @@ export default class QRScanner {
       $("#deAuthInput").val(savedDEAuth);
     }
     
+    // 初始化按鈕狀態
+    this.updateButtonStates();
+    
     // 綁定事件
     this.bindEvents();
   }
@@ -36,11 +39,18 @@ export default class QRScanner {
     // 監聽 DEAuth 輸入變化並保存
     $("#deAuthInput").on('input', function() {
       storage.saveDEAuth($(this).val());
+      self.updateButtonStates();
     });
     
     // 開始掃描按鈕
     $("#startBtn").on("click", function() {
       self.startCamera();
+    });
+    
+    // 停止掃描按鈕
+    $("#stopBtn").on("click", function() {
+      self.stopCamera();
+      self.resetToInitialState();
     });
     
     // 進階操作按鈕
@@ -73,7 +83,11 @@ export default class QRScanner {
       this.video.style.display = "block";
       $("#scanOverlay").show();
       
+      // 更新UI狀態
       $("#startBtn").hide();
+      $("#stopBtn").show();
+      $("#deAuthInput").prop('disabled', true);
+      $("#adminActionsBtn").prop('disabled', true);
       $("#result").html("正在掃描QRCode...").removeClass().addClass("info");
       $("#apiResult").html("");
       
@@ -92,6 +106,7 @@ export default class QRScanner {
     } catch (err) {
       $("#result").text("無法存取相機: " + err).removeClass().addClass("error");
       this.isScanning = false;
+      this.resetToInitialState();
     }
   }
   
@@ -103,6 +118,7 @@ export default class QRScanner {
       this.video.srcObject = null;
       this.video.style.display = "none";
       $("#scanOverlay").hide();
+      $("#result").html("尚未掃描到資料").removeClass().addClass("info");
     }
     this.isScanning = false;
     
@@ -218,10 +234,8 @@ export default class QRScanner {
         
         // 檢查是否已經報到
         if (result.CheckIn === true) {
-          $("#apiResult").html(`<span class="error">✗ 已經報到，不可重複報到</span>`);
-          setTimeout(() => {
-            this.handleScanFailure("已經報到，請重新掃描其他QRCode");
-          }, 3000);
+          alert("已經報到，不可重複報到！");
+          this.handleScanFailure("已經報到，請重新掃描其他QRCode");
           return;
         }
         
@@ -251,6 +265,23 @@ export default class QRScanner {
     this.stopCamera();
     $("#result").html(message).removeClass().addClass("error");
     $("#apiResult").html("");
+    this.resetToInitialState();
+  }
+  
+  // 重置到初始狀態
+  resetToInitialState() {
     $("#startBtn").show();
+    $("#stopBtn").hide();
+    $("#deAuthInput").prop('disabled', false);
+    this.updateButtonStates();
+  }
+  
+  // 更新按鈕狀態
+  updateButtonStates() {
+    const deAuthValue = $("#deAuthInput").val().trim();
+    const hasValue = deAuthValue.length > 0;
+    
+    $("#startBtn").prop('disabled', !hasValue);
+    $("#adminActionsBtn").prop('disabled', !hasValue);
   }
 }
