@@ -6,9 +6,6 @@
   <title>報到資訊確認</title>
   <link rel="stylesheet" href="css/main.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/auth.js"></script>
 </head>
 <body>
   <div class="container">
@@ -78,20 +75,22 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import AuthPage from './js/auth.js';
+    
     // 初始化Auth頁面
     $(document).ready(function() {
       AuthPage.init();
     });
     
     // 為相容性保留的全域函數
-    function confirmCheckIn() {
+    window.confirmCheckIn = function() {
       AuthPage.confirmCheckIn();
-    }
+    };
     
-    function goBack() {
+    window.goBack = function() {
       AuthPage.goBack();
-    }
+    };
   </script>
 </body>
 </html>

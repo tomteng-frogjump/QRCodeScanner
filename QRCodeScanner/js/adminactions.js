@@ -1,40 +1,41 @@
+import { API, CONSTANTS } from './config.js';
+import { storage, createSignature, apiCall, handleApiError, navigation } from './common.js';
+
 // AdminActions 頁面功能
-window.AdminActionsPage = {
+export default class AdminActionsPage {
   // 初始化
-  init: function() {
+  static init() {
     this.bindEvents();
-  },
+  }
   
   // 綁定事件
-  bindEvents: function() {
-    const self = this;
-    
+  static bindEvents() {
     $('#btnSendNoShowList').on('click', function() {
       if (confirm('確定要寄送未報到清單嗎？')) {
-        self.postWithAuth(APP_CONFIG.API.SEND_NO_SHOW_LIST);
+        AdminActionsPage.postWithAuth(API.SEND_NO_SHOW_LIST);
       }
     });
     
     $('#btnSendSummary').on('click', function() {
       if (confirm('確定要寄送參與名單嗎？')) {
-        self.postWithAuth(APP_CONFIG.API.SEND_SUMMARY);
+        AdminActionsPage.postWithAuth(API.SEND_SUMMARY);
       }
     });
     
     $('#btnBack').on('click', function() {
-      AppUtils.navigation.goToScanner();
+      navigation.goToScanner();
     });
-  },
+  }
   
   // 設定狀態
-  setStatus: function(html, cls = '') {
+  static setStatus(html, cls = '') {
     const $el = $('#status');
     $el.removeClass().addClass(cls).html(html);
-  },
+  }
   
   // 使用認證發送請求
-  postWithAuth: async function(url) {
-    const savedDEAuth = AppUtils.storage.getDEAuth();
+  static async postWithAuth(url) {
+    const savedDEAuth = storage.getDEAuth();
     
     if (!savedDEAuth) {
       this.setStatus('<span style="color:#dc3545">✗ 缺少DEAuth認證碼，請回掃描頁輸入</span>');
@@ -44,9 +45,9 @@ window.AdminActionsPage = {
     try {
       this.setStatus('<span style="color:#17a2b8">⌛ 正在呼叫API...</span>');
       
-      const deAuthSignature = AppUtils.createSignature(savedDEAuth, APP_CONFIG.CONSTANTS.DEFAULT_TOKEN);
+      const deAuthSignature = createSignature(savedDEAuth, CONSTANTS.DEFAULT_TOKEN);
       
-      const response = await AppUtils.apiCall(url, {}, deAuthSignature);
+      const response = await apiCall(url, {}, deAuthSignature);
       
       if (response.ok) {
         let text = '';
@@ -57,7 +58,7 @@ window.AdminActionsPage = {
         }
         this.setStatus(`<span style="color:#28a745">✓ 成功</span>${text ? '<br><small>' + text + '</small>' : ''}`);
       } else {
-        const errorMessage = AppUtils.handleApiError(response);
+        const errorMessage = handleApiError(response);
         this.setStatus(`<span style="color:#dc3545">✗ 失敗</span><br><small>${errorMessage}</small>`);
       }
     } catch (err) {
@@ -65,4 +66,4 @@ window.AdminActionsPage = {
       this.setStatus(`<span style="color:#dc3545">✗ 網路錯誤</span><br><small>${errorMessage}</small>`);
     }
   }
-};
+}

@@ -1,58 +1,59 @@
+import { API, CONSTANTS } from './config.js';
+import { storage, createSignature, setStatus, apiCall, handleApiError, navigation } from './common.js';
+
 // DirectInput 頁面功能
-window.DirectInputPage = {
+export default class DirectInputPage {
   // 初始化
-  init: function() {
+  static init() {
     this.bindEvents();
     // 自動聚焦到輸入框
     $('#employeeId').focus();
-  },
+  }
   
   // 綁定事件
-  bindEvents: function() {
-    const self = this;
-    
+  static bindEvents() {
     // 監聽Enter鍵
     $('#employeeId').on('keypress', function(e) {
       if (e.which === 13) {
-        self.queryEmployee();
+        DirectInputPage.queryEmployee();
       }
     });
     
     // 提交按鈕事件
     $('#submitBtn').on('click', function() {
-      self.queryEmployee();
+      DirectInputPage.queryEmployee();
     });
     
     // 返回按鈕事件
     $('#backBtn').on('click', function() {
-      AppUtils.navigation.goToScanner();
+      navigation.goToScanner();
     });
-  },
+  }
   
   // 查詢員工
-  queryEmployee: async function() {
+  static async queryEmployee() {
     const employeeId = $('#employeeId').val().trim();
-    const savedDEAuth = AppUtils.storage.getDEAuth();
+    const savedDEAuth = storage.getDEAuth();
     
     if (!employeeId) {
-      AppUtils.setStatus('status', '請輸入員工編號', 'error');
+      setStatus('status', '請輸入員工編號', 'error');
       return;
     }
     
     if (!savedDEAuth) {
-      AppUtils.setStatus('status', '缺少認證資訊，請回到掃描頁面輸入DEAuth認證碼', 'error');
+      setStatus('status', '缺少認證資訊，請回到掃描頁面輸入DEAuth認證碼', 'error');
       return;
     }
     
     try {
-      AppUtils.setStatus('status', '⌛ 正在查詢員工資料...', 'info');
+      setStatus('status', '⌛ 正在查詢員工資料...', 'info');
       $('#submitBtn').prop('disabled', true).text('查詢中...');
       
       // 產生簽章
-      const deAuthSignature = AppUtils.createSignature(savedDEAuth, APP_CONFIG.CONSTANTS.DEFAULT_TOKEN);
+      const deAuthSignature = createSignature(savedDEAuth, CONSTANTS.DEFAULT_TOKEN);
       
-      const response = await AppUtils.apiCall(
-        APP_CONFIG.API.DIRECT_INPUT,
+      const response = await apiCall(
+        API.DIRECT_INPUT,
         {
           ID: employeeId
         },
@@ -64,23 +65,23 @@ window.DirectInputPage = {
         
         // 檢查是否已經報到
         if (result.CheckIn === true) {
-          AppUtils.setStatus('status', '✗ 已經報到，不可重複報到', 'error');
+          setStatus('status', '✗ 已經報到，不可重複報到', 'error');
           setTimeout(() => {
-            AppUtils.setStatus('status', '');
+            setStatus('status', '');
             $('#submitBtn').prop('disabled', false).text('確認查詢');
           }, 3000);
           return;
         }
         
-        AppUtils.setStatus('status', '✓ 查詢成功，準備跳轉...', 'success');
+        setStatus('status', '✓ 查詢成功，準備跳轉...', 'success');
         
         // 2秒後跳轉到Auth頁面
         setTimeout(() => {
-          AppUtils.navigation.goToAuth(result, deAuthSignature);
+          navigation.goToAuth(result, deAuthSignature);
         }, 2000);
       } else {
-        const errorMessage = AppUtils.handleApiError(response);
-        AppUtils.setStatus('status', `✗ ${errorMessage}`, 'error');
+        const errorMessage = handleApiError(response);
+        setStatus('status', `✗ ${errorMessage}`, 'error');
         $('#submitBtn').prop('disabled', false).text('確認查詢');
       }
     } catch (error) {
@@ -93,8 +94,8 @@ window.DirectInputPage = {
         errorMessage = `網路錯誤: ${error.message}`;
       }
       
-      AppUtils.setStatus('status', `✗ ${errorMessage}`, 'error');
+      setStatus('status', `✗ ${errorMessage}`, 'error');
       $('#submitBtn').prop('disabled', false).text('確認查詢');
     }
   }
-};
+}

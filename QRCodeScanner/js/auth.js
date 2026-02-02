@@ -1,29 +1,30 @@
+import { API } from './config.js';
+import { getUrlParameter, setBadge, apiCall, handleApiError, navigation } from './common.js';
+
 // Auth 頁面功能
-window.AuthPage = {
+export default class AuthPage {
   // 初始化
-  init: function() {
+  static init() {
     this.loadMemberInfo();
     this.bindEvents();
-  },
+  }
   
   // 綁定事件
-  bindEvents: function() {
-    const self = this;
-    
+  static bindEvents() {
     // 確認報到按鈕 - 使用事件委託避免重複綁定
     $(document).off('click', '.btn-confirm').on('click', '.btn-confirm', function() {
-      self.confirmCheckIn();
+      AuthPage.confirmCheckIn();
     });
     
     // 取消按鈕 - 使用事件委託
     $(document).off('click', '.btn-cancel').on('click', '.btn-cancel', function() {
-      self.goBack();
+      AuthPage.goBack();
     });
-  },
+  }
   
   // 載入會員資訊
-  loadMemberInfo: function() {
-    const apiDataParam = AppUtils.getUrlParameter('data');
+  static loadMemberInfo() {
+    const apiDataParam = getUrlParameter('data');
     
     if (!apiDataParam) {
       alert('查無報到資料');
@@ -43,8 +44,8 @@ window.AuthPage = {
         $('#department').text(data.Department);
         
         // 設定狀態徽章
-        AppUtils.setBadge('isVegetariansBadge', data.IsVegetarians);
-        AppUtils.setBadge('hasLotteryBadge', data.HasLottery);
+        setBadge('isVegetariansBadge', data.IsVegetarians);
+        setBadge('hasLotteryBadge', data.HasLottery);
         
         // 顯示內容
         $('#loadingDiv').hide();
@@ -55,15 +56,15 @@ window.AuthPage = {
         this.goBack();
       }
     }, 1000);
-  },
+  }
   
   // 確認報到
-  confirmCheckIn: async function() {
+  static async confirmCheckIn() {
     if (!confirm('請確認已收費，並允許報到')) {
       return;
     }
     
-    const apiDataParam = AppUtils.getUrlParameter('data');
+    const apiDataParam = getUrlParameter('data');
     
     if (!apiDataParam) {
       alert('資料錯誤，無法完成報到');
@@ -79,7 +80,7 @@ window.AuthPage = {
       $confirmBtn.text('處理中...').prop('disabled', true);
       
       // 從URL參數中獲取DEAuth簽章
-      const deAuthSignature = AppUtils.getUrlParameter('deAuthSignature');
+      const deAuthSignature = getUrlParameter('deAuthSignature');
       
       if (!deAuthSignature) {
         alert('缺少認證資訊，請重新掃描');
@@ -88,8 +89,8 @@ window.AuthPage = {
       }
       
       // 呼叫報到API
-      const response = await AppUtils.apiCall(
-        APP_CONFIG.API.CONFIRM_CHECK_IN,
+      const response = await apiCall(
+        API.CONFIRM_CHECK_IN,
         {
           ID: data.ID,
           EventID: data.EventID
@@ -101,7 +102,7 @@ window.AuthPage = {
         alert('報到確認完成！');
         this.goBack();
       } else {
-        alert(`報到失敗：${AppUtils.handleApiError(response)}`);
+        alert(`報到失敗：${handleApiError(response)}`);
         $confirmBtn.text(originalText).prop('disabled', false);
       }
     } catch (error) {
@@ -109,18 +110,18 @@ window.AuthPage = {
       alert('網路錯誤，報到失敗');
       $('.btn-confirm').text('確認').prop('disabled', false);
     }
-  },
+  }
   
   // 返回掃描頁面
-  goBack: function() {
+  static goBack() {
     setTimeout(() => {
-      AppUtils.navigation.goToScanner();
+      navigation.goToScanner();
     }, 1000);
-  },
+  }
   
   // 顯示錯誤
-  showError: function() {
+  static showError() {
     $('#loadingDiv').hide();
     $('#errorDiv').show();
   }
-};
+}

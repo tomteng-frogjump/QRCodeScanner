@@ -6,9 +6,6 @@
   <title>直接輸入員工編號</title>
   <link rel="stylesheet" href="css/main.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/directinput.js"></script>
 </head>
 <body>
   <div class="container narrow">
@@ -31,7 +28,9 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import DirectInputPage from './js/directinput.js';
+    
     // 初始化DirectInput頁面
     $(document).ready(function() {
       DirectInputPage.init();

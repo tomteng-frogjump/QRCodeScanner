@@ -1,36 +1,41 @@
+import APP_CONFIG, { API, CONSTANTS, QR_SCANNER } from './config.js';
+import { storage, createSignature, parseQRCode, navigation, apiCall, handleApiError } from './common.js';
+
 // QR 掃描器功能
-window.QRScanner = {
-  // 狀態變數
-  isScanning: false,
-  lastScanTime: 0,
-  animationFrameId: null,
-  video: null,
-  canvas: null,
-  context: null,
+export default class QRScanner {
+  constructor() {
+    // 狀態變數
+    this.isScanning = false;
+    this.lastScanTime = 0;
+    this.animationFrameId = null;
+    this.video = null;
+    this.canvas = null;
+    this.context = null;
+  }
   
   // 初始化
-  init: function() {
+  init() {
     this.video = $("#video")[0];
     this.canvas = $("#canvas")[0];
     this.context = this.canvas.getContext("2d");
     
     // 載入保存的 DEAuth
-    const savedDEAuth = AppUtils.storage.getDEAuth();
+    const savedDEAuth = storage.getDEAuth();
     if (savedDEAuth) {
       $("#deAuthInput").val(savedDEAuth);
     }
     
     // 綁定事件
     this.bindEvents();
-  },
+  }
   
   // 綁定事件
-  bindEvents: function() {
+  bindEvents() {
     const self = this;
     
     // 監聽 DEAuth 輸入變化並保存
     $("#deAuthInput").on('input', function() {
-      AppUtils.storage.saveDEAuth($(this).val());
+      storage.saveDEAuth($(this).val());
     });
     
     // 開始掃描按鈕
@@ -42,26 +47,26 @@ window.QRScanner = {
     $("#adminActionsBtn").on('click', function() {
       const current = $("#deAuthInput").val();
       if (current) {
-        AppUtils.storage.saveDEAuth(current);
+        storage.saveDEAuth(current);
       }
-      AppUtils.navigation.goToAdminActions();
+      navigation.goToAdminActions();
     });
     
     // 直接輸入按鈕
     $("#directInputBtn").on('click', function() {
       const current = $("#deAuthInput").val();
       if (current) {
-        AppUtils.storage.saveDEAuth(current);
+        storage.saveDEAuth(current);
       }
-      AppUtils.navigation.goToDirectInput();
+      navigation.goToDirectInput();
     });
-  },
+  }
   
   // 開始相機
-  startCamera: async function() {
+  async startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: APP_CONFIG.QR_SCANNER.VIDEO_CONSTRAINTS
+        video: QR_SCANNER.VIDEO_CONSTRAINTS
       });
       
       this.video.srcObject = stream;
@@ -88,10 +93,10 @@ window.QRScanner = {
       $("#result").text("無法存取相機: " + err).removeClass().addClass("error");
       this.isScanning = false;
     }
-  },
+  }
   
   // 停止相機
-  stopCamera: function() {
+  stopCamera() {
     if (this.video.srcObject) {
       const tracks = this.video.srcObject.getTracks();
       tracks.forEach(track => track.stop());
@@ -105,12 +110,12 @@ window.QRScanner = {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-  },
+  }
   
   // 掃描 QR Code
-  scanQRCode: function(currentTime) {
+  scanQRCode(currentTime) {
     // 頻率控制
-    if (currentTime - this.lastScanTime < APP_CONFIG.QR_SCANNER.SCAN_INTERVAL) {
+    if (currentTime - this.lastScanTime < QR_SCANNER.SCAN_INTERVAL) {
       if (this.isScanning) {
         this.animationFrameId = requestAnimationFrame(this.scanQRCode.bind(this));
       }
@@ -128,8 +133,8 @@ window.QRScanner = {
       const scanX = Math.floor((videoWidth - scanWidth) / 2);
       const scanY = Math.floor((videoHeight - scanHeight) / 2);
       
-      const scaledWidth = Math.floor(scanWidth * APP_CONFIG.QR_SCANNER.SCAN_SCALE);
-      const scaledHeight = Math.floor(scanHeight * APP_CONFIG.QR_SCANNER.SCAN_SCALE);
+      const scaledWidth = Math.floor(scanWidth * QR_SCANNER.SCAN_SCALE);
+      const scaledHeight = Math.floor(scanHeight * QR_SCANNER.SCAN_SCALE);
       
       this.canvas.width = scaledWidth;
       this.canvas.height = scaledHeight;
@@ -153,13 +158,13 @@ window.QRScanner = {
     if (this.isScanning) {
       this.animationFrameId = requestAnimationFrame(this.scanQRCode.bind(this));
     }
-  },
+  }
   
   // 處理 QR Code 檢測
-  handleQRCodeDetected: function(data) {
+  handleQRCodeDetected(data) {
     this.isScanning = false;
     
-    const parsedData = AppUtils.parseQRCode(data);
+    const parsedData = parseQRCode(data);
     
     if (parsedData.valid) {
       $("#result").html(`<span class="success">✓ 掃描成功</span><br>ID: ${parsedData.id}`)
@@ -172,20 +177,17 @@ window.QRScanner = {
       
       const self = this;
       setTimeout(() => {
-        self.stopCamera();
-        $("#result").html("格式錯誤，請重新開始").removeClass().addClass("error");
-        $("#apiResult").html("");
-        $("#startBtn").show();
+        self.handleScanFailure("格式錯誤，請重新開始");
       }, 3000);
     }
-  },
+  }
   
   // 呼叫 API 並跳轉
-  callAPIAndRedirect: async function(parsedData) {
+  async callAPIAndRedirect(parsedData) {
     try {
       const deAuthInput = $("#deAuthInput").val().trim();
       
-      AppUtils.storage.saveDEAuth(deAuthInput);
+      storage.saveDEAuth(deAuthInput);
       
       if (!deAuthInput) {
         $("#apiResult").html('<span class="error">請先輸入DEAuth認證碼</span>');
@@ -197,14 +199,14 @@ window.QRScanner = {
       
       $("#apiResult").html('<span class="info">正在呼叫API...</span>');
       
-      const deAuthSignature = AppUtils.createSignature(deAuthInput, parsedData.token);
+      const deAuthSignature = createSignature(deAuthInput, parsedData.token);
       
       console.log("start calling api");
-      const response = await AppUtils.apiCall(
-        APP_CONFIG.API.CHECK_IN,
+      const response = await apiCall(
+        API.CHECK_IN,
         {
           ID: parsedData.id,
-          EventID: APP_CONFIG.CONSTANTS.EVENT_ID
+          EventID: CONSTANTS.EVENT_ID
         },
         deAuthSignature
       );
@@ -226,10 +228,10 @@ window.QRScanner = {
         $("#apiResult").html(`<span class="success">✓ API呼叫成功，準備跳轉...</span>`);
         
         setTimeout(() => {
-          AppUtils.navigation.goToAuth(result, deAuthSignature);
-        }, APP_CONFIG.CONSTANTS.REDIRECT_DELAY);
+          navigation.goToAuth(result, deAuthSignature);
+        }, CONSTANTS.REDIRECT_DELAY);
       } else {
-        const errorMessage = AppUtils.handleApiError(response);
+        const errorMessage = handleApiError(response);
         $("#apiResult").html(`<span class="error">✗ ${errorMessage}</span>`);
         
         setTimeout(() => {
@@ -242,13 +244,13 @@ window.QRScanner = {
         this.handleScanFailure("網路錯誤，請重新開始");
       }, 2000);
     }
-  },
+  }
   
   // 處理掃描失敗
-  handleScanFailure: function(message) {
+  handleScanFailure(message) {
     this.stopCamera();
     $("#result").html(message).removeClass().addClass("error");
     $("#apiResult").html("");
     $("#startBtn").show();
   }
-};
+}

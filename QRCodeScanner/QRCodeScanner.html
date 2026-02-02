@@ -8,9 +8,6 @@
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/qrscanner.js"></script>
 </head>
 
 <body>
@@ -42,10 +39,13 @@
     <div id="apiResult"></div>
   </div>
 
-  <script>
+  <script type="module">
+    import QRScanner from './js/qrscanner.js';
+    
     // 初始化QR掃描器
     $(document).ready(function() {
-      QRScanner.init();
+      const scanner = new QRScanner();
+      scanner.init();
     });
   </script>
 </body>
