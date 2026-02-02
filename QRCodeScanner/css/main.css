@@ -515,6 +515,11 @@ video {
     margin-bottom: 8px;
   }
   
+  .btn.icon-only {
+    padding: 6px 12px;
+    margin-bottom: 8px;
+  }
+
   .input-section {
     margin-bottom: 15px;
   }

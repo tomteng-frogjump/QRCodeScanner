@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>簡易 QRCode 掃描器</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -25,6 +26,15 @@
     <button id="stopBtn" class="btn btn-danger small" style="display: none;">停止掃描</button>
     <button id="adminActionsBtn" class="btn btn-secondary small" disabled>進階操作</button>
     <button id="directInputBtn" class="btn btn-secondary small">直接輸入員工編號</button>
+    <button type="button" class="" id="settingsBtn" data-bs-toggle="modal"
+      data-bs-target="#settingsModal">
+      <svg width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
+        <path
+          d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+        <path
+          d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" />
+      </svg>
+    </button>
 
     <div id="result">尚未掃描到資料</div>
     <div id="apiResult"></div>
@@ -41,12 +51,82 @@
     <canvas id="canvas" style="display:none;"></canvas>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="performancePreset" class="form-label">效能模式</label>
+            <select class="form-select" id="performancePreset">
+              <option value="LOW_END">省電模式 (推薦給舊手機)</option>
+              <option value="BALANCED">平衡模式 (預設)</option>
+              <option value="HIGH_PERFORMANCE">高效模式 (新手機)</option>
+              <option value="CUSTOM">自定義設定</option>
+            </select>
+            <div class="form-text">系統會根據您的設備自動選擇最佳設定，手動調整後會自動切換為自定義</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="videoQuality" class="form-label">影像品質</label>
+            <select class="form-select" id="videoQuality">
+              <option value="360p">360p (省電)</option>
+              <option value="480p">480p (標準)</option>
+              <option value="720p">720p (高品質)</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="scanSpeed" class="form-label">掃描速度: <span id="scanSpeedValue">一般</span></label>
+            <input type="range" class="form-range" min="1" max="3" step="1" id="scanSpeed" value="2">
+            <div class="d-flex justify-content-between small text-muted">
+              <span>快速</span>
+              <span>一般</span>
+              <span>省電</span>
+            </div>
+            <div class="form-text">快速掃描消耗更多電力，省電模式更節能</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="frameRate" class="form-label">影格率: <span id="frameRateValue">20fps</span></label>
+            <input type="range" class="form-range" min="10" max="30" step="5" id="frameRate" value="20">
+            <div class="form-text">較低的影格率可減少電力消耗</div>
+          </div>
+          
+          <div class="alert alert-info">
+            <small>
+              <strong>目前設備資訊:</strong><br>
+              <span id="deviceInfo"></span>
+            </small>
+          </div>
+          
+          <div class="alert alert-warning" id="cameraWarning" style="display: none;">
+            <small>
+              <i class="bi bi-exclamation-triangle"></i>
+              相機運行時無法更改設定，請停止掃描後再試。
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="saveSettings">儲存設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
   <script type="module">
     import QRScanner from './js/qrscanner.js';
-    
+
     // 初始化QR掃描器
-    $(document).ready(function() {
+    $(document).ready(function () {
       const scanner = new QRScanner();
       scanner.init();
     });
