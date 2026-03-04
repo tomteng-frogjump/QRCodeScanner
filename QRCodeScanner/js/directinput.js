@@ -55,7 +55,8 @@ export default class DirectInputPage {
       const response = await apiCall(
         API.DIRECT_INPUT,
         {
-          ID: employeeId
+          ID: employeeId,
+          EventID: CONSTANTS.EVENT_ID
         },
         deAuthSignature
       );
