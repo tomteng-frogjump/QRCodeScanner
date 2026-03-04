@@ -26,8 +26,7 @@
     <button id="stopBtn" class="btn btn-danger small" style="display: none;">停止掃描</button>
     <button id="adminActionsBtn" class="btn btn-secondary small" disabled>進階操作</button>
     <button id="directInputBtn" class="btn btn-secondary small">直接輸入員工編號</button>
-    <button type="button" class="" id="settingsBtn" data-bs-toggle="modal"
-      data-bs-target="#settingsModal">
+    <button type="button" class="" id="settingsBtn" data-bs-toggle="modal" data-bs-target="#settingsModal">
       <svg width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
         <path
           d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
@@ -70,7 +69,7 @@
             </select>
             <div class="form-text">系統會根據您的設備自動選擇最佳設定，手動調整後會自動切換為自定義</div>
           </div>
-          
+
           <div class="mb-3">
             <label for="videoQuality" class="form-label">影像品質</label>
             <select class="form-select" id="videoQuality">
@@ -79,7 +78,7 @@
               <option value="720p">720p (高品質)</option>
             </select>
           </div>
-          
+
           <div class="mb-3">
             <label for="scanSpeed" class="form-label">掃描速度: <span id="scanSpeedValue">一般</span></label>
             <input type="range" class="form-range" min="1" max="3" step="1" id="scanSpeed" value="2">
@@ -90,20 +89,20 @@
             </div>
             <div class="form-text">快速掃描消耗更多電力，省電模式更節能</div>
           </div>
-          
+
           <div class="mb-3">
             <label for="frameRate" class="form-label">影格率: <span id="frameRateValue">20fps</span></label>
             <input type="range" class="form-range" min="10" max="30" step="5" id="frameRate" value="20">
             <div class="form-text">較低的影格率可減少電力消耗</div>
           </div>
-          
+
           <div class="alert alert-info">
             <small>
               <strong>目前設備資訊:</strong><br>
               <span id="deviceInfo"></span>
             </small>
           </div>
-          
+
           <div class="alert alert-warning" id="cameraWarning" style="display: none;">
             <small>
               <i class="bi bi-exclamation-triangle"></i>
@@ -130,6 +129,10 @@
       const scanner = new QRScanner();
       scanner.init();
     });
+  </script>
+  <script type="module">
+    import { createSignature } from './js/common.js';
+    console.log("token = " + createSignature('DE26SP', '1NEyNaqWoPuiBhHG'));
   </script>
 </body>
 

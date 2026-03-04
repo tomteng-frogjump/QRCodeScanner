@@ -47,7 +47,9 @@ export default class AdminActionsPage {
       
       const deAuthSignature = createSignature(savedDEAuth, CONSTANTS.DEFAULT_TOKEN);
       
-      const response = await apiCall(url, {}, deAuthSignature);
+      const response = await apiCall(url, {
+        eventid: CONSTANTS.EVENT_ID
+      }, deAuthSignature);
       
       if (response.ok) {
         let text = '';
