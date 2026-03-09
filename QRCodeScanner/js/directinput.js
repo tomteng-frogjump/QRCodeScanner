@@ -1,4 +1,4 @@
-import { API, CONSTANTS } from './config.js';
+import APP_CONFIG, { API, CONSTANTS } from './config.js';
 import { storage, createSignature, setStatus, apiCall, handleApiError, navigation } from './common.js';
 
 // DirectInput 頁面功能
@@ -70,7 +70,7 @@ export default class DirectInputPage {
           setTimeout(() => {
             setStatus('status', '');
             $('#submitBtn').prop('disabled', false).text('確認查詢');
-          }, 3000);
+          }, CONSTANTS.REDIRECT_DELAY);
           return;
         }
         
@@ -79,7 +79,7 @@ export default class DirectInputPage {
         // 2秒後跳轉到Auth頁面
         setTimeout(() => {
           navigation.goToAuth(result, deAuthSignature);
-        }, 2000);
+        }, CONSTANTS.REDIRECT_DELAY);
       } else {
         const errorMessage = handleApiError(response);
         setStatus('status', `✗ ${errorMessage}`, 'error');

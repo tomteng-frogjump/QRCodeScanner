@@ -47,6 +47,7 @@ export default class AuthPage {
         setBadge('isVegetariansBadge', data.IsVegetarians);
         setBadge('hasLotteryBadge', data.HasLottery);
         setBadge('hasCarBadge', data.HasCar);
+        setBadge('isThreeMonthsBadge', data.IsThreeMonths);
 
         // 顯示內容
         $('#loadingDiv').hide();

@@ -4,9 +4,9 @@ const APP_CONFIG = {
     API: {
         CHECK_IN: "https://n8n.frog-jump.com/webhook/b5b93953-713e-43fd-9b2d-e7cfe2cc40aa",
         CONFIRM_CHECK_IN: "https://n8n.frog-jump.com/webhook/84b89270-ef3e-4ef4-aec3-a63ebadc6de7",
-        DIRECT_INPUT: "https://frogjump-n8n.ddns.net/webhook/716308eb-2cba-480e-8a72-f96de4461e42",
-        SEND_NO_SHOW_LIST: "https://frogjump-n8n.ddns.net/webhook/b3fa8fa7-send-no-show-list",
-        SEND_SUMMARY: "https://frogjump-n8n.ddns.net/webhook/b3fa8fa7-send-summary"
+        DIRECT_INPUT: "https://n8n.frog-jump.com/webhook/b5b93953-713e-43fd-9b2d-e7cfe2cc40aa",
+        SEND_NO_SHOW_LIST: "https://n8n.frog-jump.com/webhook/b3fa8fa7-send-no-show-list",
+        SEND_SUMMARY: "https://n8n.frog-jump.com/webhook/b3fa8fa7-send-summary"
     },
 
     // 應用程式常數
